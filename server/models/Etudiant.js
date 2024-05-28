@@ -4,6 +4,7 @@ const EtudiantSchema = new mongoose.Schema({
     matricule: {
         type: String,
         required: true,
+        unique: true,
     },
     nom: {
         type: String,
@@ -17,12 +18,14 @@ const EtudiantSchema = new mongoose.Schema({
     },
     compte_id: {
         type: mongoose.Types.ObjectId,
+        ref:'Compte',
         required: true,
        
     },
     spécialité: {
         type: mongoose.Types.ObjectId,
         required: true,
+        ref:'Spécialité',
        
     },
 });

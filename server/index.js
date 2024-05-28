@@ -79,13 +79,18 @@ app.get("/getSpecialite", (req, res) => {
 app.post("/createCompte", async (req, res) => {
     const Compte = req.body
     const newCompte = new CompteModel(Compte);
-    await newCompte.save();
-    res.json(Compte)
+    try {
+        await newCompte.save();
+        res.json(Compte);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create Compte', errBody: error });
+    }
 
 });
 
 
 app.post("/createEtudiant", async (req, res) => {
+    // Extract the required fields from the request body
     const { matricule, nom, prenom, compte_id, spécialité } = req.body;
 
     try {
@@ -99,7 +104,8 @@ app.post("/createEtudiant", async (req, res) => {
 
         await newEtudiant.save();
         res.json(newEtudiant);
-    } catch (error) {
+    } 
+    catch (error) {
         res.status(500).json({ error: 'Failed to create Etudiant' });
     }
 });
@@ -396,8 +402,15 @@ app.delete('/resetDb',async(req,res) => {
 })
 
 
+
+
+//SEEEEDIIINNNNNG TIME YAY
+
+
+
 // Endpoint to seed Compte data
 app.post('/seedCompte', async (req, res) => {
+    console.log('seeding les comptes');
     try {
         const comptes = [
             { login: 'user1', password: 'pass1' },
@@ -417,6 +430,7 @@ app.post('/seedCompte', async (req, res) => {
 
 //endpoint to seed specialite of students 
 app.post('/seedSpecialite', async (req, res) => {
+    console.log('seeding les specialites')
     try {
         const specialites = [
             { nom: 'Specialite1'},
@@ -477,3 +491,136 @@ app.post('/seedEtudiant', async (req, res) => {
         res.status(500).json({ error: 'Failed to seed Etudiants' , errBody : err});
     }
 });
+
+
+
+//SEED MODULES THEY ONLY HAVE A TYPE
+app.post('/seedModule', async (req, res) => {
+    console.log('seeding les modules');
+    try {
+        const modules = [
+            { nom: 'Module1'},
+            { nom: 'Module2'},
+            { nom: 'Module3'}
+        ];
+
+        await ModuleModel.insertMany(modules);
+        res.json({ message: 'Modules seeded successfully' });
+    } catch (error) {
+        res.status(500).json({ err: 'Failed to seed Modules' , errObj : error});
+    }
+});
+
+
+
+// Endpoint to seed Note data
+app.post('/seedNote', async (req, res) => {
+    console.log('seeding les notes')
+    try {
+        // Fetch Etudiant and Module documents to get their ObjectIds
+        console.log('fetching etudiants')
+        const etudiant1 = await EtudiantModel.findOne({ matricule: 'E001' });
+        const etudiant2 = await EtudiantModel.findOne({ matricule: 'E002' });
+        const etudiant3 = await EtudiantModel.findOne({ matricule: 'E003' });
+
+        // Fetch Module documents to get their ObjectIds
+        const module1 = await ModuleModel.findOne({ nom: 'Module1' });
+        const module2 = await ModuleModel.findOne({ nom: 'Module2' });
+        const module3 = await ModuleModel.findOne({ nom: 'Module3' });
+
+
+        // Ensure the fetched documents exist (grossomodo se if check if the objects are not null)
+        if (!etudiant1 || !etudiant2 || !etudiant3 || !module1 || !module2 || !module3) {
+            return res.status(500).json({ error: 'Required seed data not found in database' });
+        }
+
+
+        // Seed Note data using actual ObjectIds
+        const notes = [
+            { etudiant_id: etudiant1._id, module_id: module1._id, note: 85 },
+            { etudiant_id: etudiant2._id, module_id: module2._id, note: 90 },
+            { etudiant_id: etudiant3._id, module_id: module3._id, note: 95 }
+        ];
+
+        await NodeModel.insertMany(notes);
+        res.json({ message: 'Notes seeded successfully YIPPY WOOOOHOOO' });
+
+        
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to seed Notes' ,errObj : err});
+    }
+});
+
+
+
+
+//endpoint to reset puis seed the db
+app.post('/seedAll',async(req,res) =>{
+    try{
+        // Step 1: Reset the Database
+        // This removes all documents from each collection to ensure a clean state
+        await CompteModel.deleteMany({});
+        await EtudiantModel.deleteMany({});
+        await ModuleModel.deleteMany({});
+        await NoteModel.deleteMany({});
+        await SpécialitéModel.deleteMany({});
+        console.log('Database reset successfully');
+
+        // Step 2: Seed Comptes
+        // Comptes are seeded first because Etudiants reference Compte
+        const comptes = [
+            { login: 'user1', password: 'pass1' },
+            { login: 'user2', password: 'pass2' },
+            { login: 'user3', password: 'pass3' }
+        ];
+        const insertedComptes = await CompteModel.insertMany(comptes);
+        console.log('Comptes seeded successfully');
+
+        // Step 3: Seed Spécialités
+        // Spécialités are seeded next because Etudiants reference Spécialité
+        const specialites = [
+            { nom: 'Specialite1' },
+            { nom: 'Specialite2' },
+            { nom: 'Specialite3' }
+        ];
+        const insertedSpecialites = await SpécialitéModel.insertMany(specialites);
+        console.log('Specialités seeded successfully');
+
+        // Step 4: Seed Modules
+        // Modules are seeded before Notes because Notes reference Module
+        const modules = [
+            { nom: 'Module1' },
+            { nom: 'Module2' },
+            { nom: 'Module3' }
+        ];
+        const insertedModules = await ModuleModel.insertMany(modules);
+        console.log('Modules seeded successfully');
+
+        // Step 5: Seed Etudiants
+        // Etudiants are seeded now that Comptes and Spécialités exist
+        const etudiants = [
+            { matricule: 'E001', nom: 'Smith', prenom: 'John', compte_id: insertedComptes[0]._id, spécialité: insertedSpecialites[0]._id },
+            { matricule: 'E002', nom: 'Doe', prenom: 'Jane', compte_id: insertedComptes[1]._id, spécialité: insertedSpecialites[1]._id },
+            { matricule: 'E003', nom: 'Brown', prenom: 'Mike', compte_id: insertedComptes[2]._id, spécialité: insertedSpecialites[2]._id }
+        ];
+        const insertedEtudiants = await EtudiantModel.insertMany(etudiants);
+        console.log('Etudiants seeded successfully');
+
+        // Step 6: Seed Notes
+        // Notes are seeded last as they reference both Etudiants and Modules
+        const notes = [
+            { etd_id: insertedEtudiants[0]._id, module_id: insertedModules[0]._id, note: 85 },
+            { etd_id: insertedEtudiants[1]._id, module_id: insertedModules[1]._id, note: 90 },
+            { etd_id: insertedEtudiants[2]._id, module_id: insertedModules[2]._id, note: 95 }
+        ];
+        await NoteModel.insertMany(notes);
+        console.log('Notes seeded successfully');
+
+        // Send a response indicating success
+        res.json({ message: 'Database seeded successfully' });
+
+    }
+    catch(err){
+        res.status(500).json({error : 'Failed to seed all data 😟🥺🥺',errBody:err})
+    }   
+})

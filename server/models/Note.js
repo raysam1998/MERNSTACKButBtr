@@ -2,8 +2,13 @@ const mongoose = require("mongoose");
 
 const NoteSchema = new mongoose.Schema({
     etd_id: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
+    },
+    module_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Module',
+        required: true
     },
     notes: {
         type: Array,

@@ -5,6 +5,9 @@ const ModuleSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    description: {
+        type: String
+    }
 });
 
 const ModuleModel = mongoose.model("Module",ModuleSchema, "Module");
