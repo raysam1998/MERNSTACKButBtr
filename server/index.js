@@ -1,5 +1,5 @@
 //import env variable
-require('dotenv').config()
+require('dotenv').config();
 
 const express = require("express");
 const app = express();
@@ -82,7 +82,9 @@ app.post("/createCompte", async (req, res) => {
     try {
         await newCompte.save();
         res.json(Compte);
-    } catch (error) {
+        console.log("created acc "+Compte)
+    } 
+    catch (error) {
         res.status(500).json({ error: 'Failed to create Compte', errBody: error });
     }
 
@@ -333,29 +335,7 @@ app.delete("/deleteSpecialite/:id", async (req, res) => {
 
 
 
-app.listen(3001, () => {
-    const networkInterfaces = os.networkInterfaces();
-    //fancy listen detailed msg shenanigans the bot made :
-    const addresses = Object.keys(networkInterfaces).reduce((acc, interfaceName) => {
-        const interfaceAddresses = networkInterfaces[interfaceName]
-            .filter(iface => iface.family === 'IPv4' && !iface.internal)
-            .map(iface => iface.address);
-        return acc.concat(interfaceAddresses);
-    }, []);
-    // Log the server startup messages
-    console.log('Server is running:');
-    //since running on port 3001
-    console.log('  Local:    http://localhost:3001');
-     // Log network addresses
-     addresses.forEach(address => {
-        console.log(`  Network:  http://${address}:3001`);
-    });
 
-     // Once connected to MongoDB, log a success message
-     mongoose.connection.once('open', () => {
-        console.log(`Connected to MongoDB at ${process.env.MONGODB_URI}`);
-    });
-});
 
 //basic CRUD tests
 app.get('/testInsert',async(req,res) =>{
@@ -591,7 +571,7 @@ app.post('/seedAll',async(req,res) =>{
         const modules = [
             { nom: 'Module1' },
             { nom: 'Module2' },
-            { nom: 'Module3' }
+            { nom: 'ModuleTa3Zebi' }
         ];
         const insertedModules = await ModuleModel.insertMany(modules);
         console.log('Modules seeded successfully');
@@ -624,3 +604,31 @@ app.post('/seedAll',async(req,res) =>{
         res.status(500).json({error : 'Failed to seed all data 😟🥺🥺',errBody:err})
     }   
 })
+
+
+
+
+
+app.listen(process.env.PORT, () => {
+    const networkInterfaces = os.networkInterfaces();
+    //fancy listen detailed msg shenanigans the bot made :
+    const addresses = Object.keys(networkInterfaces).reduce((acc, interfaceName) => {
+        const interfaceAddresses = networkInterfaces[interfaceName]
+            .filter(iface => iface.family === 'IPv4' && !iface.internal)
+            .map(iface => iface.address);
+        return acc.concat(interfaceAddresses);
+    }, []);
+    // Log the server startup messages
+    console.log('Server is running:');
+    //since running on port 3001
+    console.log(`  Local:    http://localhost:${process.env.PORT}`);
+     // Log network addresses
+     addresses.forEach(address => {
+        console.log(`  Network:  http://${address}:${process.env.PORT}`);
+    });
+
+     // Once connected to MongoDB, log a success message
+     mongoose.connection.once('open', () => {
+        console.log(`Connected to MongoDB at ${process.env.MONGODB_URI}`);
+    });
+});

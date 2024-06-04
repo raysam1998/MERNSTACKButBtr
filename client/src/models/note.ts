@@ -8,5 +8,4 @@ export class Note {
         this.module_id = module_id;
         this.notes = notes;
     }
-
 }
